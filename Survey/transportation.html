@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transportation - Birth Choice Conversation Guide</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="survey-container">
+        <!-- Header -->
+        <header class="survey-header">
+            <h1>Your Birth Choice Conversation Guide</h1>
+            <p class="subtitle">Deciding About a C-Section for the First Birth, or a Vaginal Birth After C-Section (VBAC) versus a Repeat C-Section (RCS)</p>
+        </header>
+
+        <!-- Progress Bar -->
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 50%;"></div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="survey-content">
+            <h2>Transportation and Distance Factors</h2>
+
+            <!-- Question 1 - SINGLE (Dropdown) -->
+            <div class="question-group">
+                <label class="question-label">How far do you live from the hospital where you plan to deliver?</label>
+                <select name="hospital_distance">
+                    <option value="">Select an option...</option>
+                    <option value="15-30">15–30 minutes</option>
+                    <option value="30-60">30–60 minutes</option>
+                    <option value="60-90">60-90 minutes</option>
+                    <option value="90+">More than 90 minutes</option>
+                </select>
+            </div>
+
+            <!-- Question 2 - MULTIPLE (Checkboxes) -->
+            <div class="question-group">
+                <label class="question-label">How do you get around the neighborhood?</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="transport_drive" name="neighborhood_transport" value="drive">
+                        <label for="transport_drive">I drive</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="transport_taxi" name="neighborhood_transport" value="taxi">
+                        <label for="transport_taxi">I take a taxi or rideshare (Uber, Lyft)</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="transport_public" name="neighborhood_transport" value="public">
+                        <label for="transport_public">I use public transportation</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="transport_walk" name="neighborhood_transport" value="walk">
+                        <label for="transport_walk">I walk</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question 3 - MULTIPLE (Checkboxes) -->
+            <div class="question-group">
+                <label class="question-label">If you have a vehicle, what kind is it?</label>
+                <div class="checkbox-group">
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="vehicle_sedan" name="vehicle_type" value="sedan">
+                        <label for="vehicle_sedan">Sedan</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="vehicle_sports" name="vehicle_type" value="sports">
+                        <label for="vehicle_sports">Sportscar that is low to the ground</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="vehicle_suv" name="vehicle_type" value="suv">
+                        <label for="vehicle_suv">SUV/truck that is high off the ground</label>
+                    </div>
+                    <div class="checkbox-item">
+                        <input type="checkbox" id="vehicle_none" name="vehicle_type" value="none">
+                        <label for="vehicle_none">I don't have a vehicle</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question 4 - SINGLE (Dropdown) -->
+            <div class="question-group">
+                <label class="question-label">If you have a vehicle, where do you usually park?</label>
+                <select name="parking_location">
+                    <option value="">Select an option...</option>
+                    <option value="garage">Attached garage or driveway</option>
+                    <option value="street">Street parking</option>
+                    <option value="distant">Distant parking</option>
+                    <option value="parking_garage">Parking garage</option>
+                    <option value="no_vehicle">I don't have a vehicle</option>
+                </select>
+            </div>
+
+            <!-- Question 5 - SINGLE (Dropdown) -->
+            <div class="question-group">
+                <label class="question-label">How far do you walk from where you park, or get public transportation to your home?</label>
+                <select name="walk_distance">
+                    <option value="">Select an option...</option>
+                    <option value="very_short">Very short walk</option>
+                    <option value="short">Short walk</option>
+                    <option value="moderate">Moderate walk</option>
+                    <option value="long">Long walk</option>
+                </select>
+            </div>
+
+            <!-- Question 6 - SINGLE (Dropdown) -->
+            <div class="question-group">
+                <label class="question-label">Do you have reliable transportation to the hospital, and can you get there quickly if you need to?</label>
+                <select name="reliable_transport">
+                    <option value="">Select an option...</option>
+                    <option value="multiple">Yes, I have multiple options</option>
+                    <option value="one_good">Yes, I have one good option</option>
+                    <option value="somewhat">I have somewhat reliable transportation, but I am concerned about getting there quickly</option>
+                    <option value="not_reliable">I don't have very reliable transportation and am concerned about that</option>
+                </select>
+            </div>
+
+            <!-- Question 7 - SINGLE (Dropdown) -->
+            <div class="question-group">
+                <label class="question-label">If you drive yourself to the hospital for delivery, do you have someone who can drive your car home for you?</label>
+                <select name="car_driver">
+                    <option value="">Select an option...</option>
+                    <option value="yes">Yes, someone will be with me or can come get the car</option>
+                    <option value="not_sure">I'm not sure, but I think I can arrange this</option>
+                    <option value="no">No, I don't have anyone available</option>
+                    <option value="no_vehicle">I don't have a vehicle</option>
+                </select>
+            </div>
+
+            <!-- Question 8 - SINGLE (Dropdown) -->
+            <div class="question-group">
+                <label class="question-label">Do you have an infant car seat to bring your baby home from the hospital?</label>
+                <select name="car_seat">
+                    <option value="">Select an option...</option>
+                    <option value="yes">Yes</option>
+                    <option value="plan_to_get">No, but I plan to get one</option>
+                    <option value="not_sure_how">No, and I'm not sure how I will get one</option>
+                    <option value="dont_know">I don't know if I need one</option>
+                </select>
+            </div>
+
+            <!-- Question 9 - SINGLE (Dropdown) -->
+            <div class="question-group">
+                <label class="question-label">If your baby needs extended hospital care (NICU), how would you get back and forth to visit and/or bring breastmilk?</label>
+                <select name="nicu_transport">
+                    <option value="">Select an option...</option>
+                    <option value="reliable">I have reliable daily transportation</option>
+                    <option value="arrange_hard">I could arrange transportation, but it would be hard</option>
+                    <option value="need_assistance">I would need assistance from the hospital or social services</option>
+                    <option value="formula">I plan to formula-feed</option>
+                    <option value="not_sure">I'm not sure how I would manage this</option>
+                </select>
+            </div>
+
+            <!-- Question 10 - SINGLE (Dropdown) -->
+            <div class="question-group">
+                <label class="question-label">After delivery, how confident are you about getting transportation to follow-up appointments for yourself and your baby?</label>
+                <select name="followup_transport">
+                    <option value="">Select an option...</option>
+                    <option value="multiple">I have multiple, reliable options</option>
+                    <option value="one_option">I have one option, but I may need to arrange it in advance</option>
+                    <option value="arrange_services">I will need to arrange transportation through my insurance or other services</option>
+                    <option value="dont_know">I don't know how I will get to appointments</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="button-container">
+            <a href="sections.html" class="btn btn-outline">Back to Sections</a>
+            <a href="thankyou.html" class="btn btn-primary">Continue</a>
+        </div>
+    </div>
+</body>
+</html>
