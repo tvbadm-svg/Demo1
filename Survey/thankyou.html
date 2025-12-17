@@ -32,7 +32,7 @@
             <!-- Download Section -->
             <div class="download-section">
                 <h3 style="font-size: 18px; color: #3B8BB8; margin-bottom: 16px;">Personalized PDF Report</h3>
-                <button class="btn btn-primary" disabled>
+                <button class="btn btn-primary" id="downloadReportBtn">
                     📄 Download Your Personalized Report (PDF)
                 </button>
                 <p style="font-size: 14px; color: #666666; margin-top: 24px;">Save your response to our database [Feature Disabled]</p>
@@ -48,5 +48,249 @@
             <a href="index.html" class="btn btn-primary">Start Over</a>
         </div>
     </div>
+
+    <script>
+        // Scoring rules based on transport_distance_ruleset.yaml
+        const scoringRules = {
+            q1_distance_to_hospital: {
+                '15-30': { score: 0, flags: [], actions: [] },
+                '30-60': { score: 1, flags: ['Distance_Moderate'], actions: ['Identify fastest route(s) at different times of day; confirm a backup route.'] },
+                '60-90': { score: 2, flags: ['Distance_High'], actions: ['Discuss early-labor departure thresholds with your clinician; consider arriving earlier.'] },
+                '90+': { score: 3, flags: ['Distance_Critical'], actions: ['Create a clear departure plan; discuss timing/arrival strategy with your clinician.', 'Identify an emergency alternative (closest facility) for urgent situations.'] }
+            },
+            q2_neighborhood_transport: {
+                'drive': { score: 0, flags: [], actions: [] },
+                'taxi': { score: 1, flags: ['Transport_DependsOnRideshare'], actions: ['List 2+ ride options; verify late-night availability; confirm payment method.'] },
+                'public': { score: 2, flags: ['Transport_DependsOnPublicTransit'], actions: ['Map routes to the hospital (including nights/weekends); define a backup ride.'] },
+                'walk': { score: 2, flags: ['Transport_WalkingPrimary'], actions: ['Identify who can drive you in labor; plan for weather/ice and timing.'] }
+            },
+            q3_vehicle_type: {
+                'sedan': { score: 0, flags: [], actions: [] },
+                'sports': { score: 1, flags: ['Vehicle_LowClearance'], actions: ['Plan for easier entry/exit; consider an alternate vehicle for labor/discharge.'] },
+                'suv': { score: 1, flags: ['Vehicle_HighStepUp'], actions: ['Plan step support; consider postpartum comfort getting in/out.'] },
+                'none': { score: 2, flags: ['NoVehicle'], actions: ['Build Plan A/B/C transportation for labor, discharge, and newborn visits.'], resources: ['Check whether your insurance offers non-emergency medical transportation.'] }
+            },
+            q4_parking: {
+                'garage': { score: 0, flags: [], actions: [] },
+                'street': { score: 1, flags: ['Parking_Street'], actions: ['Plan for carrying items and winter/ice; identify safest typical parking spots.'] },
+                'distant': { score: 2, flags: ['Parking_Distant'], actions: ['Arrange door-to-door help after delivery; plan safe route and lighting.'] },
+                'parking_garage': { score: 1, flags: ['Parking_Garage'], actions: ['Plan elevator access and carrying items; consider safety and lighting.'] },
+                'no_vehicle': { score: 0, flags: [], actions: [] }
+            },
+            q5_walk_distance: {
+                'very_short': { score: 0, flags: [], actions: [] },
+                'short': { score: 1, flags: [], actions: [] },
+                'moderate': { score: 2, flags: ['HomeAccess_ModerateWalk'], actions: ['Plan for postpartum mobility limits; arrange help carrying items.'] },
+                'long': { score: 3, flags: ['HomeAccess_LongWalk'], actions: ['Plan door-to-door help for first 1–2 weeks postpartum; avoid carrying heavy items.'] }
+            },
+            q6_reliable_transport: {
+                'multiple': { score: 0, flags: [], actions: [] },
+                'one_good': { score: 1, flags: ['HospitalTransport_SinglePointOfFailure'], actions: ['Create a backup option (Plan B) with a named person/company.'] },
+                'somewhat': { score: 3, flags: ['HospitalTransport_Uncertain'], actions: ['Create Plan A/B/C; define "when to leave" triggers with your clinician.'] },
+                'not_reliable': { score: 4, flags: ['HospitalTransport_Unreliable'], actions: ['Treat transportation planning as a priority safety item; involve your care team now.'], resources: ['Ask hospital social work/case management about transportation support.'] }
+            },
+            q7_car_home: {
+                'yes': { score: 0, flags: [], actions: [] },
+                'not_sure': { score: 1, flags: ['CarReturn_Uncertain'], actions: ['Name the person now; confirm they can come at any hour; plan a spare key.'] },
+                'no': { score: 2, flags: ['CarReturn_NoDriver'], actions: ['Plan for parking duration/fees; plan discharge ride; consider being driven to hospital.'] },
+                'no_vehicle': { score: 0, flags: [], actions: [] }
+            },
+            q8_infant_seat: {
+                'yes': { score: 0, flags: [], actions: ['Install/check fit and know where it is before you leave for the hospital.'] },
+                'plan_to_get': { score: 1, flags: ['CarSeat_Pending'], actions: ['Set a deadline to obtain it; practice installation.'] },
+                'not_sure_how': { score: 3, flags: ['CarSeat_Barrier'], actions: ['Resolve before delivery/discharge; connect to support resources.'], resources: ['Ask hospital/clinic social work about car-seat resources.'] },
+                'dont_know': { score: 2, flags: ['CarSeat_KnowledgeGap'], actions: ['Review discharge expectations and transportation plan for going home.'] }
+            },
+            q9_nicu_transport: {
+                'reliable': { score: 0, flags: [], actions: [] },
+                'arrange_hard': { score: 2, flags: ['NICU_Transport_Hard'], actions: ['Create visiting schedule and pumping/storage plan; identify 2 helpers.'], resources: ['Connect with NICU social work and lactation support.'] },
+                'need_assistance': { score: 3, flags: ['NICU_Transport_NeedsAssistance'], actions: ['Connect to hospital social work early; ask about lodging/transport support.'] },
+                'formula': { score: 1, flags: ['NICU_FeedingFormula'], actions: ['Still plan transportation for visitation and communication with NICU team.'] },
+                'not_sure': { score: 4, flags: ['NICU_Transport_Uncertain'], actions: ['Escalate planning now; identify options and connect to support resources.'] }
+            },
+            q10_followup_transport: {
+                'multiple': { score: 0, flags: [], actions: [] },
+                'one_option': { score: 1, flags: ['FollowUpTransport_AdvancePlanning'], actions: ['Pre-schedule rides for first appointments once dates are known.'] },
+                'arrange_services': { score: 2, flags: ['FollowUpTransport_InsuranceDependent'], actions: ['Call insurer now to confirm benefit rules, lead time, and limits.'] },
+                'dont_know': { score: 4, flags: ['FollowUpTransport_Uncertain'], actions: ['Create a plan now and ask clinic/hospital for resource support.'] }
+            }
+        };
+
+        // Risk level bands
+        const riskBands = {
+            low: [0, 2],
+            moderate: [3, 5],
+            high: [6, 8],
+            critical: [9, 27]
+        };
+
+        function getRiskLevel(score) {
+            if (score <= 2) return { level: 'Low', color: '#4CAF50' };
+            if (score <= 5) return { level: 'Moderate', color: '#FFC107' };
+            if (score <= 8) return { level: 'High', color: '#FF9800' };
+            return { level: 'Critical', color: '#F44336' };
+        }
+
+        function generateReport(responses) {
+            let totalScore = 0;
+            const allFlags = [];
+            const allActions = [];
+            const allResources = [];
+            const solidItems = [];
+            const flaggedItems = [];
+
+            if (!responses || !responses.questions) {
+                return null;
+            }
+
+            responses.questions.forEach(q => {
+                const rules = scoringRules[q.id];
+                if (!rules) return;
+
+                // Handle array answers (checkboxes)
+                if (Array.isArray(q.answer)) {
+                    q.answer.forEach(ans => {
+                        const rule = rules[ans];
+                        if (rule) {
+                            totalScore += rule.score;
+                            if (rule.flags) allFlags.push(...rule.flags);
+                            if (rule.actions) allActions.push(...rule.actions);
+                            if (rule.resources) allResources.push(...rule.resources);
+
+                            if (rule.score === 0 && rule.flags.length === 0) {
+                                solidItems.push(q.text);
+                            } else if (rule.flags.length > 0) {
+                                flaggedItems.push({ question: q.text, answer: ans, flags: rule.flags });
+                            }
+                        }
+                    });
+                } else {
+                    // Single answer
+                    const rule = rules[q.answer];
+                    if (rule) {
+                        totalScore += rule.score;
+                        if (rule.flags) allFlags.push(...rule.flags);
+                        if (rule.actions) allActions.push(...rule.actions);
+                        if (rule.resources) allResources.push(...rule.resources);
+
+                        if (rule.score === 0 && rule.flags.length === 0) {
+                            solidItems.push(q.text);
+                        } else if (rule.flags && rule.flags.length > 0) {
+                            flaggedItems.push({ question: q.text, answer: q.answerText, flags: rule.flags });
+                        }
+                    }
+                }
+            });
+
+            const riskLevel = getRiskLevel(totalScore);
+
+            return {
+                score: totalScore,
+                riskLevel: riskLevel,
+                flags: [...new Set(allFlags)],
+                actions: [...new Set(allActions)],
+                resources: [...new Set(allResources)],
+                solidItems: solidItems,
+                flaggedItems: flaggedItems,
+                timestamp: responses.timestamp
+            };
+        }
+
+        function formatReportForPR(report, responses) {
+            const timestamp = new Date(report.timestamp).toLocaleString();
+
+            let markdown = `# Birth Choice Survey - Personalized Report\n\n`;
+            markdown += `**Generated:** ${timestamp}\n`;
+            markdown += `**Theme:** Transportation and Distance Factors 🚗\n\n`;
+            markdown += `---\n\n`;
+            markdown += `## Overall Assessment\n\n`;
+            markdown += `- **Risk Score:** ${report.score}/27\n`;
+            markdown += `- **Risk Level:** ${report.riskLevel.level}\n\n`;
+
+            if (report.solidItems.length > 0) {
+                markdown += `## ✅ What Looks Solid\n\n`;
+                report.solidItems.forEach(item => {
+                    markdown += `- ${item}\n`;
+                });
+                markdown += `\n`;
+            }
+
+            if (report.flaggedItems.length > 0) {
+                markdown += `## ⚠️ Things to Focus On\n\n`;
+                report.flaggedItems.forEach(item => {
+                    markdown += `- **${item.question}**\n`;
+                    markdown += `  - Answer: ${item.answer}\n`;
+                    markdown += `  - Flags: ${item.flags.join(', ')}\n`;
+                });
+                markdown += `\n`;
+            }
+
+            if (report.actions.length > 0) {
+                markdown += `## 📋 Your Action Items\n\n`;
+                report.actions.forEach((action, idx) => {
+                    markdown += `${idx + 1}. ${action}\n`;
+                });
+                markdown += `\n`;
+            }
+
+            if (report.resources.length > 0) {
+                markdown += `## 🤝 Support Resources\n\n`;
+                report.resources.forEach(resource => {
+                    markdown += `- ${resource}\n`;
+                });
+                markdown += `\n`;
+            }
+
+            markdown += `---\n\n`;
+            markdown += `## Survey Responses\n\n`;
+            responses.questions.forEach(q => {
+                const answer = Array.isArray(q.answerText) ? q.answerText.join(', ') : q.answerText;
+                if (answer && answer !== 'Select an option...') {
+                    markdown += `**${q.text}**\n`;
+                    markdown += `> ${answer}\n\n`;
+                }
+            });
+
+            return markdown;
+        }
+
+        function createGitHubPR(reportMarkdown) {
+            const repo = 'tvbadm-svg/Demo1';
+            const title = encodeURIComponent('Personalized Report - Transportation Assessment');
+            const body = encodeURIComponent(reportMarkdown);
+
+            // Open GitHub new issue page with pre-filled content
+            // Using issues as it allows direct creation without auth for public repos
+            const url = `https://github.com/${repo}/issues/new?title=${title}&body=${body}`;
+
+            window.open(url, '_blank');
+        }
+
+        // Button click handler
+        document.getElementById('downloadReportBtn').addEventListener('click', function() {
+            // Get survey responses from localStorage
+            const storedResponses = localStorage.getItem('birthChoiceSurvey_transportation');
+
+            if (!storedResponses) {
+                alert('No survey responses found. Please complete the survey first.');
+                window.location.href = 'transportation.html';
+                return;
+            }
+
+            const responses = JSON.parse(storedResponses);
+            const report = generateReport(responses);
+
+            if (!report) {
+                alert('Unable to generate report. Please complete the survey again.');
+                window.location.href = 'transportation.html';
+                return;
+            }
+
+            const reportMarkdown = formatReportForPR(report, responses);
+
+            // Create and open the GitHub PR/Issue
+            createGitHubPR(reportMarkdown);
+        });
+    </script>
 </body>
 </html>
