@@ -1,0 +1,495 @@
+# ============================================================================
+# TRANSPORT & DISTANCE THEME RULESET
+# ============================================================================
+# Theme: Transportation and Distance Factors
+# Survey: Birth Choice Survey - Demo 1
+# ============================================================================
+
+theme_id: transport_distance
+theme_name: "Transportation and Distance Factors"
+theme_icon: "🚗"
+
+# ----------------------------------------------------------------------------
+# SCORING CONFIGURATION
+# ----------------------------------------------------------------------------
+scoring:
+  bands:
+    low: [0, 2]
+    moderate: [3, 5]
+    high: [6, 8]
+    critical: [9, 12]
+  max_score: 27  # Sum of maximum possible score_add values
+
+# ----------------------------------------------------------------------------
+# GLOBAL FIELDS
+# ----------------------------------------------------------------------------
+globals:
+  fields:
+    - transport_risk_score
+    - transport_risk_level
+    - flags
+    - actions
+    - resources
+
+# ----------------------------------------------------------------------------
+# CROSS-QUESTION RULES
+# ----------------------------------------------------------------------------
+cross_question_rules:
+
+  - id: skip_vehicle_followups_when_no_vehicle
+    description: "Skip vehicle-related questions when user has no vehicle"
+    if:
+      any:
+        - equals:
+            question_id: q3_vehicle_type
+            answer_id: q3_no_vehicle
+        - equals:
+            question_id: q7_car_home
+            answer_id: q7_no_vehicle
+    then:
+      set:
+        has_vehicle: false
+      skip_questions:
+        - q4_parking
+        - q7_car_home
+
+  - id: trigger_transport_plan_builder
+    description: "Trigger comprehensive transport plan when critical flags present"
+    if:
+      any_flag_in:
+        - HospitalTransport_Uncertain
+        - HospitalTransport_Unreliable
+        - Distance_Critical
+    then:
+      add_actions:
+        - "Build a written Transportation Plan (Plan A / Plan B / Plan C) for labor + discharge + early appointments."
+
+# ----------------------------------------------------------------------------
+# QUESTIONS
+# ----------------------------------------------------------------------------
+questions:
+
+  # -------------------------------------------------------------------------
+  # Q1: Distance to Hospital
+  # -------------------------------------------------------------------------
+  - id: q1_distance_to_hospital
+    text: "How far do you live from the hospital where you plan to deliver?"
+    source: "Demo 1"
+
+    options:
+      - id: q1_15_30
+        text: "15–30 minutes"
+        score_add: 0
+
+      - id: q1_30_60
+        text: "30–60 minutes"
+        score_add: 1
+        flags_add:
+          - Distance_Moderate
+        actions_add:
+          - "Identify fastest route(s) at different times of day; confirm a backup route."
+
+      - id: q1_60_90
+        text: "60-90 minutes"
+        score_add: 2
+        flags_add:
+          - Distance_High
+        actions_add:
+          - "Discuss early-labor departure thresholds with your clinician; consider arriving earlier."
+
+      - id: q1_90_plus
+        text: "More than 90 minutes"
+        score_add: 3
+        flags_add:
+          - Distance_Critical
+        actions_add:
+          - "Create a clear departure plan; discuss timing/arrival strategy with your clinician."
+          - "Identify an emergency alternative (closest facility) for urgent situations."
+
+  # -------------------------------------------------------------------------
+  # Q2: Neighborhood Transportation
+  # -------------------------------------------------------------------------
+  - id: q2_neighborhood_transport
+    text: "How do you get around the neighborhood?"
+
+    options:
+      - id: q2_drive
+        text: "I drive"
+        score_add: 0
+
+      - id: q2_rideshare
+        text: "I take a taxi or rideshare (Uber, Lyft)"
+        score_add: 1
+        flags_add:
+          - Transport_DependsOnRideshare
+        actions_add:
+          - "List 2+ ride options; verify late-night availability; confirm payment method."
+
+      - id: q2_public
+        text: "I use public transportation"
+        score_add: 2
+        flags_add:
+          - Transport_DependsOnPublicTransit
+        actions_add:
+          - "Map routes to the hospital (including nights/weekends); define a backup ride."
+
+      - id: q2_walk
+        text: "I walk"
+        score_add: 2
+        flags_add:
+          - Transport_WalkingPrimary
+        actions_add:
+          - "Identify who can drive you in labor; plan for weather/ice and timing."
+
+  # -------------------------------------------------------------------------
+  # Q3: Vehicle Type
+  # -------------------------------------------------------------------------
+  - id: q3_vehicle_type
+    text: "If you have a vehicle, what kind is it?"
+
+    options:
+      - id: q3_sedan
+        text: "Sedan"
+        score_add: 0
+
+      - id: q3_low_sportscar
+        text: "Sportscar that is low to the ground"
+        score_add: 1
+        flags_add:
+          - Vehicle_LowClearance
+        actions_add:
+          - "Plan for easier entry/exit; consider an alternate vehicle for labor/discharge."
+
+      - id: q3_high_suv_truck
+        text: "SUV/truck that is high off the ground"
+        score_add: 1
+        flags_add:
+          - Vehicle_HighStepUp
+        actions_add:
+          - "Plan step support; consider postpartum comfort getting in/out."
+
+      - id: q3_no_vehicle
+        text: "I don't have a vehicle"
+        score_add: 2
+        flags_add:
+          - NoVehicle
+        actions_add:
+          - "Build Plan A/B/C transportation for labor, discharge, and newborn visits."
+        resources_add:
+          - "Check whether your insurance offers non-emergency medical transportation."
+
+  # -------------------------------------------------------------------------
+  # Q4: Parking Location
+  # -------------------------------------------------------------------------
+  - id: q4_parking
+    text: "If you have a vehicle, where do you usually park?"
+    conditional_on: q3_vehicle_type
+
+    options:
+      - id: q4_driveway
+        text: "Attached garage or driveway"
+        score_add: 0
+
+      - id: q4_street
+        text: "Street parking"
+        score_add: 1
+        flags_add:
+          - Parking_Street
+        actions_add:
+          - "Plan for carrying items and winter/ice; identify safest typical parking spots."
+
+      - id: q4_distant
+        text: "Distant parking"
+        score_add: 2
+        flags_add:
+          - Parking_Distant
+        actions_add:
+          - "Arrange door-to-door help after delivery; plan safe route and lighting."
+
+      - id: q4_garage
+        text: "Parking garage"
+        score_add: 1
+        flags_add:
+          - Parking_Garage
+        actions_add:
+          - "Plan elevator access and carrying items; consider safety and lighting."
+
+      - id: q4_no_vehicle
+        text: "I don't have a vehicle"
+        score_add: 0
+        notes: "Should be skipped when q3_no_vehicle selected."
+
+  # -------------------------------------------------------------------------
+  # Q5: Walk Distance from Parking/Transit
+  # -------------------------------------------------------------------------
+  - id: q5_walk_from_parking_or_transit
+    text: "How far do you walk from where you park, or get public transportation to your home?"
+
+    options:
+      - id: q5_very_short
+        text: "Very short walk"
+        score_add: 0
+
+      - id: q5_short
+        text: "Short walk"
+        score_add: 1
+
+      - id: q5_moderate
+        text: "Moderate walk"
+        score_add: 2
+        flags_add:
+          - HomeAccess_ModerateWalk
+        actions_add:
+          - "Plan for postpartum mobility limits; arrange help carrying items."
+
+      - id: q5_long
+        text: "Long walk"
+        score_add: 3
+        flags_add:
+          - HomeAccess_LongWalk
+        actions_add:
+          - "Plan door-to-door help for first 1–2 weeks postpartum; avoid carrying heavy items."
+
+  # -------------------------------------------------------------------------
+  # Q6: Reliable Transport to Hospital
+  # -------------------------------------------------------------------------
+  - id: q6_reliable_transport_to_hospital
+    text: "Do you have reliable transportation to the hospital, and can you get there quickly if you need to?"
+
+    options:
+      - id: q6_multiple
+        text: "Yes, I have multiple options"
+        score_add: 0
+
+      - id: q6_one
+        text: "Yes, I have one good option"
+        score_add: 1
+        flags_add:
+          - HospitalTransport_SinglePointOfFailure
+        actions_add:
+          - "Create a backup option (Plan B) with a named person/company."
+
+      - id: q6_somewhat_concerned
+        text: "I have somewhat reliable transportation, but I am concerned about getting there quickly"
+        score_add: 3
+        flags_add:
+          - HospitalTransport_Uncertain
+        actions_add:
+          - "Create Plan A/B/C; define 'when to leave' triggers with your clinician."
+
+      - id: q6_not_reliable
+        text: "I don't have very reliable transportation and am concerned about that"
+        score_add: 4
+        flags_add:
+          - HospitalTransport_Unreliable
+        actions_add:
+          - "Treat transportation planning as a priority safety item; involve your care team now."
+        resources_add:
+          - "Ask hospital social work/case management about transportation support."
+
+  # -------------------------------------------------------------------------
+  # Q7: Car Return After Delivery
+  # -------------------------------------------------------------------------
+  - id: q7_car_home
+    text: "If you drive yourself to the hospital for delivery, do you have someone who can drive your car home for you?"
+    conditional_on: q3_vehicle_type
+
+    options:
+      - id: q7_yes
+        text: "Yes, someone will be with me or can come get the car"
+        score_add: 0
+
+      - id: q7_maybe
+        text: "I'm not sure, but I think I can arrange this"
+        score_add: 1
+        flags_add:
+          - CarReturn_Uncertain
+        actions_add:
+          - "Name the person now; confirm they can come at any hour; plan a spare key."
+
+      - id: q7_no
+        text: "No, I don't have anyone available"
+        score_add: 2
+        flags_add:
+          - CarReturn_NoDriver
+        actions_add:
+          - "Plan for parking duration/fees; plan discharge ride; consider being driven to hospital."
+
+      - id: q7_no_vehicle
+        text: "I don't have a vehicle"
+        score_add: 0
+        notes: "Skip/NA."
+
+  # -------------------------------------------------------------------------
+  # Q8: Infant Car Seat
+  # -------------------------------------------------------------------------
+  - id: q8_infant_car_seat
+    text: "Do you have an infant car seat to bring your baby home from the hospital?"
+
+    options:
+      - id: q8_yes
+        text: "Yes"
+        score_add: 0
+        actions_add:
+          - "Install/check fit and know where it is before you leave for the hospital."
+
+      - id: q8_plan_to_get
+        text: "No, but I plan to get one"
+        score_add: 1
+        flags_add:
+          - CarSeat_Pending
+        actions_add:
+          - "Set a deadline to obtain it; practice installation."
+
+      - id: q8_no_unsure_how
+        text: "No, and I'm not sure how I will get one"
+        score_add: 3
+        flags_add:
+          - CarSeat_Barrier
+        actions_add:
+          - "Resolve before delivery/discharge; connect to support resources."
+        resources_add:
+          - "Ask hospital/clinic social work about car-seat resources."
+
+      - id: q8_dont_know_need
+        text: "I don't know if I need one"
+        score_add: 2
+        flags_add:
+          - CarSeat_KnowledgeGap
+        actions_add:
+          - "Review discharge expectations and transportation plan for going home."
+
+  # -------------------------------------------------------------------------
+  # Q9: NICU Transportation
+  # -------------------------------------------------------------------------
+  - id: q9_nicu_transport
+    text: "If your baby needs extended hospital care (NICU), how would you get back and forth to visit and/or bring breastmilk?"
+
+    options:
+      - id: q9_reliable
+        text: "I have reliable daily transportation"
+        score_add: 0
+
+      - id: q9_hard
+        text: "I could arrange transportation, but it would be hard"
+        score_add: 2
+        flags_add:
+          - NICU_Transport_Hard
+        actions_add:
+          - "Create visiting schedule and pumping/storage plan; identify 2 helpers."
+        resources_add:
+          - "Connect with NICU social work and lactation support."
+
+      - id: q9_need_assistance
+        text: "I would need assistance from the hospital or social services"
+        score_add: 3
+        flags_add:
+          - NICU_Transport_NeedsAssistance
+        actions_add:
+          - "Connect to hospital social work early; ask about lodging/transport support."
+
+      - id: q9_formula
+        text: "I plan to formula-feed"
+        score_add: 1
+        flags_add:
+          - NICU_FeedingFormula
+        actions_add:
+          - "Still plan transportation for visitation and communication with NICU team."
+
+      - id: q9_not_sure_manage
+        text: "I'm not sure how I would manage this"
+        score_add: 4
+        flags_add:
+          - NICU_Transport_Uncertain
+        actions_add:
+          - "Escalate planning now; identify options and connect to support resources."
+
+  # -------------------------------------------------------------------------
+  # Q10: Follow-up Appointments Transportation
+  # -------------------------------------------------------------------------
+  - id: q10_followup_transport_confidence
+    text: "After delivery, how confident are you about getting transportation to follow-up appointments for yourself and your baby?"
+
+    options:
+      - id: q10_multiple
+        text: "I have multiple, reliable options"
+        score_add: 0
+
+      - id: q10_one_advance
+        text: "I have one option, but I may need to arrange it in advance"
+        score_add: 1
+        flags_add:
+          - FollowUpTransport_AdvancePlanning
+        actions_add:
+          - "Pre-schedule rides for first appointments once dates are known."
+
+      - id: q10_insurance_or_services
+        text: "I will need to arrange transportation through my insurance or other services"
+        score_add: 2
+        flags_add:
+          - FollowUpTransport_InsuranceDependent
+        actions_add:
+          - "Call insurer now to confirm benefit rules, lead time, and limits."
+
+      - id: q10_dont_know
+        text: "I don't know how I will get to appointments"
+        score_add: 4
+        flags_add:
+          - FollowUpTransport_Uncertain
+        actions_add:
+          - "Create a plan now and ask clinic/hospital for resource support."
+
+# ============================================================================
+# FLAG REFERENCE
+# ============================================================================
+# All flags used in this theme with descriptions:
+#
+# Distance Flags:
+#   - Distance_Moderate: 30-60 min from hospital
+#   - Distance_High: 60-90 min from hospital
+#   - Distance_Critical: 90+ min from hospital
+#
+# Transport Mode Flags:
+#   - Transport_DependsOnRideshare: Relies on Uber/Lyft/taxi
+#   - Transport_DependsOnPublicTransit: Relies on public transit
+#   - Transport_WalkingPrimary: Primary mode is walking
+#   - NoVehicle: Does not have a personal vehicle
+#
+# Vehicle Flags:
+#   - Vehicle_LowClearance: Low sportscar difficult for entry/exit
+#   - Vehicle_HighStepUp: High SUV/truck difficult for entry/exit
+#
+# Parking Flags:
+#   - Parking_Street: Parks on street
+#   - Parking_Distant: Parks far from home
+#   - Parking_Garage: Parks in parking garage
+#
+# Home Access Flags:
+#   - HomeAccess_ModerateWalk: Moderate walk from parking to home
+#   - HomeAccess_LongWalk: Long walk from parking to home
+#
+# Hospital Transport Flags:
+#   - HospitalTransport_SinglePointOfFailure: Only one transport option
+#   - HospitalTransport_Uncertain: Uncertain about transport reliability
+#   - HospitalTransport_Unreliable: Transport is unreliable
+#
+# Car Return Flags:
+#   - CarReturn_Uncertain: Uncertain about car return help
+#   - CarReturn_NoDriver: No one to drive car home
+#
+# Car Seat Flags:
+#   - CarSeat_Pending: Plans to get car seat but hasn't yet
+#   - CarSeat_Barrier: Barrier to obtaining car seat
+#   - CarSeat_KnowledgeGap: Doesn't know if car seat is needed
+#
+# NICU Flags:
+#   - NICU_Transport_Hard: NICU visits would be difficult
+#   - NICU_Transport_NeedsAssistance: Needs help for NICU transport
+#   - NICU_FeedingFormula: Plans to formula feed
+#   - NICU_Transport_Uncertain: Uncertain about NICU transport
+#
+# Follow-up Flags:
+#   - FollowUpTransport_AdvancePlanning: Needs advance planning for appointments
+#   - FollowUpTransport_InsuranceDependent: Depends on insurance for transport
+#   - FollowUpTransport_Uncertain: Uncertain about follow-up transport
+# ============================================================================

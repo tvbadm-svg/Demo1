@@ -1,0 +1,182 @@
+# ============================================================================
+# PERSONALIZED REPORT - RULESET TEMPLATE
+# ============================================================================
+# Use this template to create rulesets for each survey theme.
+# Copy this file and replace placeholder values with theme-specific content.
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# THEME IDENTIFICATION
+# ----------------------------------------------------------------------------
+theme_id: "your_theme_id"           # Unique identifier (snake_case)
+theme_name: "Your Theme Display Name"  # Human-readable name
+theme_icon: "🔵"                    # Emoji icon for the theme
+
+# ----------------------------------------------------------------------------
+# SCORING CONFIGURATION
+# ----------------------------------------------------------------------------
+# Define risk level bands based on cumulative score
+# Bands should cover the full range from 0 to max possible score
+scoring:
+  bands:
+    low: [0, 2]        # Score 0-2 = Low risk
+    moderate: [3, 5]   # Score 3-5 = Moderate risk
+    high: [6, 8]       # Score 6-8 = High risk
+    critical: [9, 12]  # Score 9+ = Critical risk
+
+  # Maximum possible score for this theme (sum of all max score_add values)
+  max_score: 12
+
+# ----------------------------------------------------------------------------
+# GLOBAL FIELDS
+# ----------------------------------------------------------------------------
+# Fields computed and tracked across all questions in this theme
+globals:
+  fields:
+    - "{theme_id}_risk_score"    # Calculated total score
+    - "{theme_id}_risk_level"    # Determined risk band
+    - "flags"                    # List of warning flags
+    - "actions"                  # List of action items
+    - "resources"                # List of support resources
+
+# ----------------------------------------------------------------------------
+# CROSS-QUESTION RULES
+# ----------------------------------------------------------------------------
+# Conditional logic that spans multiple questions
+# Processed BEFORE calculating final scores and outputs
+cross_question_rules:
+
+  # RULE: Skip follow-up questions based on prior answer
+  - id: "skip_rule_example"
+    description: "Skip dependent questions when precondition not met"
+    if:
+      any:  # OR condition (use 'all' for AND)
+        - equals:
+            question_id: "q1_example"
+            answer_id: "q1_option_skip"
+    then:
+      set:
+        variable_name: false
+      skip_questions:
+        - "q2_dependent_question"
+        - "q3_another_dependent"
+
+  # RULE: Add actions when specific flags are triggered
+  - id: "trigger_action_on_flags"
+    description: "Add extra actions when critical flags present"
+    if:
+      any_flag_in:
+        - "Flag_Critical_1"
+        - "Flag_Critical_2"
+    then:
+      add_actions:
+        - "Take immediate action described here."
+        - "Secondary action if needed."
+
+# ----------------------------------------------------------------------------
+# QUESTIONS
+# ----------------------------------------------------------------------------
+# Each question in the survey with its options and scoring rules
+questions:
+
+  # -------------------------------------------------------------------------
+  # QUESTION 1: Example Question
+  # -------------------------------------------------------------------------
+  - id: "q1_example_question"
+    text: "What is your example question text?"
+    source: "Survey Section Name"  # Optional: source reference
+
+    options:
+      # OPTION A: No risk (score 0)
+      - id: "q1_option_a"
+        text: "Best case answer"
+        score_add: 0
+        # No flags, actions, or resources needed for optimal answers
+
+      # OPTION B: Low risk (score 1)
+      - id: "q1_option_b"
+        text: "Slightly suboptimal answer"
+        score_add: 1
+        flags_add:
+          - "Flag_Minor_Concern"
+        actions_add:
+          - "Minor action to address this concern."
+
+      # OPTION C: Moderate risk (score 2)
+      - id: "q1_option_c"
+        text: "Concerning answer"
+        score_add: 2
+        flags_add:
+          - "Flag_Moderate_Concern"
+        actions_add:
+          - "Action to address moderate concern."
+          - "Secondary action if applicable."
+        resources_add:
+          - "Resource to help with this situation."
+
+      # OPTION D: High risk (score 3+)
+      - id: "q1_option_d"
+        text: "Most concerning answer"
+        score_add: 3
+        flags_add:
+          - "Flag_High_Concern"
+        actions_add:
+          - "Urgent action needed."
+          - "Follow-up action."
+        resources_add:
+          - "Critical resource for support."
+          - "Additional resource option."
+
+  # -------------------------------------------------------------------------
+  # QUESTION 2: Conditional Question Example
+  # -------------------------------------------------------------------------
+  - id: "q2_conditional_example"
+    text: "This question may be skipped based on Q1 answer"
+    conditional_on: "q1_example_question"  # Reference to dependent question
+
+    options:
+      - id: "q2_option_a"
+        text: "Option A"
+        score_add: 0
+
+      - id: "q2_option_b"
+        text: "Option B"
+        score_add: 1
+        flags_add:
+          - "Flag_Q2_Concern"
+        actions_add:
+          - "Action for Q2 concern."
+
+      - id: "q2_skip"
+        text: "Not applicable (skip)"
+        score_add: 0
+        notes: "Selected automatically when parent question triggers skip"
+
+# ============================================================================
+# SCORING GUIDELINES
+# ============================================================================
+#
+# SCORE VALUES:
+#   0 = Optimal/No concern - adds nothing to risk score
+#   1 = Minor concern - slight increase to risk
+#   2 = Moderate concern - notable increase to risk
+#   3 = Significant concern - substantial increase
+#   4+ = Critical concern - major impact on risk level
+#
+# FLAGS:
+#   - Use descriptive names: Category_SpecificConcern
+#   - Examples: Distance_Critical, Transport_Unreliable, Support_Limited
+#   - Flags appear in "Things to focus on next" section
+#
+# ACTIONS:
+#   - Write clear, actionable steps
+#   - Start with a verb (Plan, Create, Discuss, Identify, etc.)
+#   - Be specific about what to do
+#   - Actions appear in "Your top priorities" section
+#
+# RESOURCES:
+#   - Point to specific help sources
+#   - Include who to contact or where to go
+#   - Resources appear in "Support you can ask for" section
+#
+# ============================================================================
