@@ -1,0 +1,283 @@
+# ============================================================================
+# PERSONALIZED REPORT (PR) FORMAT SPECIFICATION
+# ============================================================================
+# This document defines the structure, rules, and format for generating
+# Personalized Reports in PDF format based on Survey answers.
+# ============================================================================
+
+version: "1.0"
+document_type: "Personalized Report"
+output_format: "PDF"
+
+# ----------------------------------------------------------------------------
+# REPORT METADATA
+# ----------------------------------------------------------------------------
+metadata:
+  title: "Your Birth Choice Personal Report"
+  generation_info:
+    date_format: "YYYY-MM-DD"
+    time_format: "HH:MM AM/PM"
+    timezone: "User's local timezone"
+  disclaimer: |
+    This personalized report summarizes your responses about your home environment
+    and daily routines. These lifestyle factors can help you and your healthcare
+    provider consider practical aspects of recovery after either a vaginal birth
+    (VBAC) or a C-section. This report is NOT intended to replace medical advice.
+    Please discuss these factors with your provider.
+
+# ----------------------------------------------------------------------------
+# REPORT SECTIONS STRUCTURE
+# ----------------------------------------------------------------------------
+sections:
+  # Each survey theme generates one section in the report
+  # Themes are processed in order and each produces a themed section
+
+  section_template:
+    header:
+      icon: "emoji or icon representing the theme"
+      title: "Theme Name + Summary"
+      # Example: "🚗 Transportation & Distance Summary"
+
+    subsections:
+      # 1. Response Summary - Shows all Q&A for this theme
+      - id: response_summary
+        title: "Your Response Summary"
+        content_type: table
+        columns:
+          - question_number
+          - question_text
+          - user_response
+        display_format: |
+          Question 1: [response text]
+          Question 2: [response text]
+          ...
+          Question N: [response text]
+
+      # 2. Risk Score - Calculated sum of all score_add values
+      - id: risk_score
+        title: "Risk Score"
+        calculation: "SUM of all score_add values from selected options"
+        display_format: "[theme]_risk_score: [calculated_value] (0–[max_possible])"
+        # Example: "Transportation risk score: 7 (0–12)"
+
+      # 3. Risk Level - Determined from scoring bands
+      - id: risk_level
+        title: "Risk Level"
+        calculation: "Map risk_score to scoring.bands"
+        display_format: "[theme]_risk_level = [level_name]"
+        levels:
+          - name: "Low"
+            indicator: "green"
+          - name: "Moderate"
+            indicator: "yellow"
+          - name: "High"
+            indicator: "orange"
+          - name: "Critical"
+            indicator: "red"
+
+      # 4. What Looks Solid - Items with zero risk contribution
+      - id: solid_items
+        title: "What looks solid"
+        content_source: "Questions where user selected option with score_add: 0"
+        display_format: "Bulleted list of positive findings"
+        icon: "✅"
+
+      # 5. Things to Focus On - Flagged items
+      - id: flagged_items
+        title: "Things to focus on next"
+        content_source: "All flags_add values from selected options"
+        display_format: "Bulleted list of flags with descriptions"
+        icon: "⚠️"
+
+      # 6. Top Priorities - Action items
+      - id: action_items
+        title: "Your top priorities"
+        content_source: "All actions_add values from selected options + cross_question_rules actions"
+        display_format: "Numbered list of actionable steps"
+        icon: "📋"
+
+      # 7. Support Resources - Available help
+      - id: resource_items
+        title: "Support you can ask for"
+        content_source: "All resources_add values from selected options"
+        display_format: "Bulleted list of resources and contacts"
+        icon: "🤝"
+
+# ----------------------------------------------------------------------------
+# SCORING CALCULATION RULES
+# ----------------------------------------------------------------------------
+scoring_rules:
+  # How to calculate the risk score for each theme
+  calculation_method:
+    description: "Sum all score_add values from user's selected options"
+    formula: |
+      theme_risk_score = SUM(
+        for each question in theme.questions:
+          selected_option.score_add
+      )
+
+  # Cross-question rule processing
+  cross_question_processing:
+    order: 1  # Process before generating output
+    actions:
+      - skip_questions: "Remove skipped questions from display and calculation"
+      - set_variables: "Store computed values for conditional logic"
+      - add_actions: "Append additional action items based on conditions"
+
+  # Risk level determination
+  risk_level_mapping:
+    method: "Compare score against scoring.bands ranges"
+    logic: |
+      for band_name, [min, max] in scoring.bands:
+        if min <= score <= max:
+          return band_name
+
+# ----------------------------------------------------------------------------
+# OUTPUT CATEGORIZATION RULES
+# ----------------------------------------------------------------------------
+output_categorization:
+
+  solid_items_rule:
+    condition: "option.score_add == 0"
+    action: "Add question/answer to 'What looks solid' section"
+    format: "Positive statement about the user's situation"
+
+  flagged_items_rule:
+    condition: "option.flags_add is not empty"
+    action: "Add each flag to 'Things to focus on next' section"
+    format: "Warning or concern description"
+
+  action_items_rule:
+    sources:
+      - "option.actions_add from all selected options"
+      - "cross_question_rules[].then.add_actions when conditions match"
+    action: "Compile into 'Your top priorities' section"
+    format: "Actionable recommendation with specific steps"
+    priority_order: "By severity (Critical > High > Moderate > Low)"
+
+  resource_items_rule:
+    condition: "option.resources_add is not empty"
+    action: "Add each resource to 'Support you can ask for' section"
+    format: "Resource description with contact/access information"
+
+# ----------------------------------------------------------------------------
+# PDF GENERATION SPECIFICATIONS
+# ----------------------------------------------------------------------------
+pdf_specs:
+  page_layout:
+    size: "Letter (8.5 x 11 inches)"
+    margins:
+      top: "1 inch"
+      bottom: "1 inch"
+      left: "0.75 inch"
+      right: "0.75 inch"
+    orientation: "Portrait"
+
+  typography:
+    title_font:
+      family: "Sans-serif (e.g., Arial, Helvetica)"
+      size: "24pt"
+      weight: "Bold"
+    section_header:
+      family: "Sans-serif"
+      size: "18pt"
+      weight: "Bold"
+    subsection_header:
+      family: "Sans-serif"
+      size: "14pt"
+      weight: "Semi-bold"
+    body_text:
+      family: "Sans-serif"
+      size: "11pt"
+      weight: "Regular"
+
+  colors:
+    primary: "#2C3E50"      # Dark blue-gray for headers
+    secondary: "#34495E"    # Lighter gray for subheaders
+    risk_low: "#27AE60"     # Green
+    risk_moderate: "#F39C12" # Yellow/Orange
+    risk_high: "#E67E22"    # Orange
+    risk_critical: "#E74C3C" # Red
+    solid: "#27AE60"        # Green for positive items
+    warning: "#F39C12"      # Yellow for flagged items
+    action: "#3498DB"       # Blue for action items
+    resource: "#9B59B6"     # Purple for resources
+
+  visual_elements:
+    icons: "Use emoji or SVG icons for section headers"
+    risk_indicator: "Colored badge or progress bar showing risk level"
+    section_dividers: "Horizontal line between major sections"
+    highlight_boxes: "Colored boxes for important callouts"
+
+# ----------------------------------------------------------------------------
+# THEMES AVAILABLE FOR REPORT
+# ----------------------------------------------------------------------------
+available_themes:
+  - theme_id: transport_distance
+    theme_name: "Transportation & Distance"
+    icon: "🚗"
+    ruleset_file: "transport_distance_ruleset.yaml"
+    max_score: 27  # Sum of all maximum score_add values
+
+  # Future themes to be added:
+  # - theme_id: home_environment
+  #   theme_name: "Home Environment"
+  #   icon: "🏠"
+  # - theme_id: support_network
+  #   theme_name: "Support Network"
+  #   icon: "👥"
+  # - theme_id: daily_activities
+  #   theme_name: "Daily Activities"
+  #   icon: "📅"
+  # - theme_id: caregiving
+  #   theme_name: "Caregiving Responsibilities"
+  #   icon: "👶"
+  # - theme_id: work_school
+  #   theme_name: "Work & School"
+  #   icon: "💼"
+
+# ----------------------------------------------------------------------------
+# REPORT GENERATION WORKFLOW
+# ----------------------------------------------------------------------------
+generation_workflow:
+  steps:
+    1_collect_responses:
+      description: "Gather all survey responses from completed survey"
+      input: "Survey answers object"
+
+    2_load_rulesets:
+      description: "Load YAML rulesets for each theme in the survey"
+      input: "Theme IDs from survey"
+
+    3_process_cross_rules:
+      description: "Apply cross_question_rules to determine skips and conditional actions"
+      actions:
+        - "Evaluate 'if' conditions"
+        - "Execute 'then' actions (set variables, skip questions, add actions)"
+
+    4_calculate_scores:
+      description: "Calculate risk scores for each theme"
+      actions:
+        - "Sum score_add values from selected options"
+        - "Exclude skipped questions"
+        - "Determine risk level from bands"
+
+    5_categorize_outputs:
+      description: "Sort items into output categories"
+      categories:
+        - solid_items
+        - flagged_items
+        - action_items
+        - resource_items
+
+    6_generate_pdf:
+      description: "Render PDF document"
+      actions:
+        - "Create header with metadata"
+        - "Generate each theme section"
+        - "Apply styling and colors"
+        - "Add page numbers and footer"
+
+    7_deliver_report:
+      description: "Provide download link or email delivery"
+      trigger: "Button on last survey page"
