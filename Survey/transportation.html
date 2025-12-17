@@ -173,8 +173,117 @@
         <!-- Navigation Buttons -->
         <div class="button-container">
             <a href="sections.html" class="btn btn-outline">Back to Sections</a>
-            <a href="thankyou.html" class="btn btn-primary">Continue</a>
+            <a href="thankyou.html" class="btn btn-primary" id="continueBtn">Continue</a>
         </div>
     </div>
+
+    <script>
+        // Save survey responses to localStorage before navigating to thank you page
+        document.getElementById('continueBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+
+            const responses = {
+                timestamp: new Date().toISOString(),
+                theme: 'Transportation and Distance Factors',
+                questions: []
+            };
+
+            // Question 1 - Hospital Distance (dropdown)
+            const hospitalDistance = document.querySelector('select[name="hospital_distance"]');
+            responses.questions.push({
+                id: 'q1_distance_to_hospital',
+                text: 'How far do you live from the hospital where you plan to deliver?',
+                answer: hospitalDistance.value,
+                answerText: hospitalDistance.options[hospitalDistance.selectedIndex]?.text || ''
+            });
+
+            // Question 2 - Neighborhood Transport (checkboxes)
+            const transportOptions = document.querySelectorAll('input[name="neighborhood_transport"]:checked');
+            responses.questions.push({
+                id: 'q2_neighborhood_transport',
+                text: 'How do you get around the neighborhood?',
+                answer: Array.from(transportOptions).map(cb => cb.value),
+                answerText: Array.from(transportOptions).map(cb => cb.nextElementSibling.textContent)
+            });
+
+            // Question 3 - Vehicle Type (checkboxes)
+            const vehicleOptions = document.querySelectorAll('input[name="vehicle_type"]:checked');
+            responses.questions.push({
+                id: 'q3_vehicle_type',
+                text: 'If you have a vehicle, what kind is it?',
+                answer: Array.from(vehicleOptions).map(cb => cb.value),
+                answerText: Array.from(vehicleOptions).map(cb => cb.nextElementSibling.textContent)
+            });
+
+            // Question 4 - Parking Location (dropdown)
+            const parkingLocation = document.querySelector('select[name="parking_location"]');
+            responses.questions.push({
+                id: 'q4_parking',
+                text: 'If you have a vehicle, where do you usually park?',
+                answer: parkingLocation.value,
+                answerText: parkingLocation.options[parkingLocation.selectedIndex]?.text || ''
+            });
+
+            // Question 5 - Walk Distance (dropdown)
+            const walkDistance = document.querySelector('select[name="walk_distance"]');
+            responses.questions.push({
+                id: 'q5_walk_distance',
+                text: 'How far do you walk from where you park, or get public transportation to your home?',
+                answer: walkDistance.value,
+                answerText: walkDistance.options[walkDistance.selectedIndex]?.text || ''
+            });
+
+            // Question 6 - Reliable Transport (dropdown)
+            const reliableTransport = document.querySelector('select[name="reliable_transport"]');
+            responses.questions.push({
+                id: 'q6_reliable_transport',
+                text: 'Do you have reliable transportation to the hospital, and can you get there quickly if you need to?',
+                answer: reliableTransport.value,
+                answerText: reliableTransport.options[reliableTransport.selectedIndex]?.text || ''
+            });
+
+            // Question 7 - Car Driver (dropdown)
+            const carDriver = document.querySelector('select[name="car_driver"]');
+            responses.questions.push({
+                id: 'q7_car_home',
+                text: 'If you drive yourself to the hospital for delivery, do you have someone who can drive your car home for you?',
+                answer: carDriver.value,
+                answerText: carDriver.options[carDriver.selectedIndex]?.text || ''
+            });
+
+            // Question 8 - Car Seat (dropdown)
+            const carSeat = document.querySelector('select[name="car_seat"]');
+            responses.questions.push({
+                id: 'q8_infant_seat',
+                text: 'Do you have an infant car seat to bring your baby home from the hospital?',
+                answer: carSeat.value,
+                answerText: carSeat.options[carSeat.selectedIndex]?.text || ''
+            });
+
+            // Question 9 - NICU Transport (dropdown)
+            const nicuTransport = document.querySelector('select[name="nicu_transport"]');
+            responses.questions.push({
+                id: 'q9_nicu_transport',
+                text: 'If your baby needs extended hospital care (NICU), how would you get back and forth to visit and/or bring breastmilk?',
+                answer: nicuTransport.value,
+                answerText: nicuTransport.options[nicuTransport.selectedIndex]?.text || ''
+            });
+
+            // Question 10 - Follow-up Transport (dropdown)
+            const followupTransport = document.querySelector('select[name="followup_transport"]');
+            responses.questions.push({
+                id: 'q10_followup_transport',
+                text: 'After delivery, how confident are you about getting transportation to follow-up appointments for yourself and your baby?',
+                answer: followupTransport.value,
+                answerText: followupTransport.options[followupTransport.selectedIndex]?.text || ''
+            });
+
+            // Save to localStorage
+            localStorage.setItem('birthChoiceSurvey_transportation', JSON.stringify(responses));
+
+            // Navigate to thank you page
+            window.location.href = 'thankyou.html';
+        });
+    </script>
 </body>
 </html>
