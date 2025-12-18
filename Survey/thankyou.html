@@ -57,11 +57,11 @@
         const questionParaphrases = {
             q1_distance_to_hospital: {
                 brief: 'Hospital distance',
-                template: 'You live {answer} from the hospital'
+                template: 'I live {answer} from the hospital'
             },
             q2_neighborhood_transport: {
                 brief: 'Getting around',
-                template: 'You get around by {answerLower}'
+                template: 'I get around by {answerLower}'
             },
             q3_vehicle_type: {
                 brief: 'Vehicle type',
@@ -198,6 +198,7 @@
             const allResources = [];
             const solidItems = [];
             const flaggedItems = [];
+            const questionActions = {}; // Track actions per question
 
             if (!responses || !responses.questions) {
                 return null;
@@ -207,6 +208,8 @@
                 const rules = scoringRules[q.id];
                 if (!rules) return;
 
+                questionActions[q.id] = []; // Initialize actions array for this question
+
                 // Handle array answers (checkboxes)
                 if (Array.isArray(q.answer)) {
                     q.answer.forEach(ans => {
@@ -214,7 +217,10 @@
                         if (rule) {
                             totalScore += rule.score;
                             if (rule.flags) allFlags.push(...rule.flags);
-                            if (rule.actions) allActions.push(...rule.actions);
+                            if (rule.actions) {
+                                allActions.push(...rule.actions);
+                                questionActions[q.id].push(...rule.actions);
+                            }
                             if (rule.resources) allResources.push(...rule.resources);
 
                             if (rule.score === 0 && rule.flags.length === 0) {
@@ -233,7 +239,10 @@
                     if (rule) {
                         totalScore += rule.score;
                         if (rule.flags) allFlags.push(...rule.flags);
-                        if (rule.actions) allActions.push(...rule.actions);
+                        if (rule.actions) {
+                            allActions.push(...rule.actions);
+                            questionActions[q.id].push(...rule.actions);
+                        }
                         if (rule.resources) allResources.push(...rule.resources);
 
                         if (rule.score === 0 && rule.flags.length === 0) {
@@ -255,6 +264,7 @@
                 resources: [...new Set(allResources)],
                 solidItems: solidItems,
                 flaggedItems: flaggedItems,
+                questionActions: questionActions,
                 timestamp: responses.timestamp
             };
         }
@@ -288,14 +298,6 @@
                 markdown += `\n`;
             }
 
-            if (report.actions.length > 0) {
-                markdown += `## 📋 Your Action Items\n\n`;
-                report.actions.forEach((action, idx) => {
-                    markdown += `${idx + 1}. ${action}\n`;
-                });
-                markdown += `\n`;
-            }
-
             if (report.resources.length > 0) {
                 markdown += `## 🤝 Support Resources\n\n`;
                 report.resources.forEach(resource => {
@@ -306,14 +308,16 @@
 
             markdown += `---\n\n`;
             markdown += `## Survey Responses\n\n`;
-            markdown += `| Question | Response |\n`;
-            markdown += `|----------|----------|\n`;
+            markdown += `| Question | Response | Your Action Items |\n`;
+            markdown += `|----------|----------|-------------------|\n`;
             responses.questions.forEach(q => {
                 const answer = Array.isArray(q.answerText) ? q.answerText.join(', ') : q.answerText;
                 if (answer && answer !== 'Select an option...') {
                     const paraphrase = questionParaphrases[q.id];
                     const briefQuestion = paraphrase ? paraphrase.brief : q.text;
-                    markdown += `| ${briefQuestion} | ${answer} |\n`;
+                    const actions = report.questionActions[q.id] || [];
+                    const actionText = actions.length > 0 ? actions.join(' ') : '—';
+                    markdown += `| ${briefQuestion} | ${answer} | ${actionText} |\n`;
                 }
             });
 
@@ -409,16 +413,6 @@
                 yPos += 5;
             }
 
-            // Action Items
-            if (report.actions.length > 0) {
-                addText('Your Action Items', 14, true, [43, 112, 150]);
-                yPos += 2;
-                report.actions.forEach((action, idx) => {
-                    addText(`${idx + 1}. ${action}`, 10, false, null, 5);
-                });
-                yPos += 5;
-            }
-
             // Support Resources
             if (report.resources.length > 0) {
                 addText('Support Resources', 14, true, [59, 139, 184]);
@@ -444,23 +438,30 @@
             addText('Survey Responses', 14, true, [43, 112, 150]);
             yPos += 5;
 
-            // Table dimensions
+            // Table dimensions - 3 columns
             const tableStartX = margin;
-            const colWidth1 = 55; // Question column
-            const colWidth2 = contentWidth - colWidth1; // Answer column
-            const rowHeight = 8;
+            const colWidth1 = 35; // Question column
+            const colWidth2 = 40; // Response column
+            const colWidth3 = contentWidth - colWidth1 - colWidth2; // Action Items column
             const cellPadding = 2;
+
+            // Helper function to calculate row height based on content
+            function getRowHeight(lines) {
+                return Math.max(8, lines * 4 + 4);
+            }
 
             // Table header
             doc.setFillColor(240, 240, 240);
-            doc.rect(tableStartX, yPos, colWidth1, rowHeight, 'F');
-            doc.rect(tableStartX + colWidth1, yPos, colWidth2, rowHeight, 'F');
-            doc.setFontSize(9);
+            doc.rect(tableStartX, yPos, colWidth1, 8, 'F');
+            doc.rect(tableStartX + colWidth1, yPos, colWidth2, 8, 'F');
+            doc.rect(tableStartX + colWidth1 + colWidth2, yPos, colWidth3, 8, 'F');
+            doc.setFontSize(8);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(43, 112, 150);
             doc.text('Question', tableStartX + cellPadding, yPos + 5);
             doc.text('Response', tableStartX + colWidth1 + cellPadding, yPos + 5);
-            yPos += rowHeight;
+            doc.text('Your Action Items', tableStartX + colWidth1 + colWidth2 + cellPadding, yPos + 5);
+            yPos += 8;
 
             // Table rows
             doc.setFont('helvetica', 'normal');
@@ -469,23 +470,33 @@
             responses.questions.forEach(q => {
                 const answer = Array.isArray(q.answerText) ? q.answerText.join(', ') : q.answerText;
                 if (answer && answer !== 'Select an option...') {
+                    // Get action items for this question
+                    const actions = report.questionActions[q.id] || [];
+                    const actionText = actions.length > 0 ? actions.join(' ') : '—';
+
+                    // Get brief question text
+                    const paraphrase = questionParaphrases[q.id];
+                    const briefQuestion = paraphrase ? paraphrase.brief : q.text.substring(0, 20);
+
+                    // Calculate wrapped text for action items
+                    doc.setFontSize(7);
+                    const wrappedActions = doc.splitTextToSize(actionText, colWidth3 - (cellPadding * 2));
+                    const rowHeight = getRowHeight(wrappedActions.length);
+
                     // Check for page break
-                    if (yPos > 265) {
+                    if (yPos + rowHeight > 270) {
                         doc.addPage();
                         yPos = 20;
                     }
 
-                    // Get brief question text
-                    const paraphrase = questionParaphrases[q.id];
-                    const briefQuestion = paraphrase ? paraphrase.brief : q.text.substring(0, 30);
-
-                    // Draw row border
+                    // Draw row borders
                     doc.setDrawColor(220, 220, 220);
                     doc.rect(tableStartX, yPos, colWidth1, rowHeight);
                     doc.rect(tableStartX + colWidth1, yPos, colWidth2, rowHeight);
+                    doc.rect(tableStartX + colWidth1 + colWidth2, yPos, colWidth3, rowHeight);
 
                     // Draw text
-                    doc.setFontSize(9);
+                    doc.setFontSize(8);
                     doc.setTextColor(60, 60, 60);
                     doc.text(briefQuestion, tableStartX + cellPadding, yPos + 5);
 
@@ -496,6 +507,13 @@
                         displayAnswer = displayAnswer.substring(0, displayAnswer.length - 4) + '...';
                     }
                     doc.text(displayAnswer, tableStartX + colWidth1 + cellPadding, yPos + 5);
+
+                    // Draw action items (wrapped)
+                    doc.setFontSize(7);
+                    doc.setTextColor(80, 80, 80);
+                    wrappedActions.forEach((line, idx) => {
+                        doc.text(line, tableStartX + colWidth1 + colWidth2 + cellPadding, yPos + 5 + (idx * 4));
+                    });
 
                     yPos += rowHeight;
                 }
