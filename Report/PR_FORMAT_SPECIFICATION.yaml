@@ -79,14 +79,20 @@ sections:
       - id: solid_items
         title: "What looks solid"
         content_source: "Questions where user selected option with score_add: 0"
-        display_format: "Bulleted list of positive findings"
+        display_format: |
+          Bulleted list of positive findings in conversational format:
+          - [Paraphrased question]: [User's response]
+          Example: "Distance to hospital: You're 15-30 minutes away"
         icon: "✅"
 
       # 5. Things to Focus On - Flagged items
       - id: flagged_items
         title: "Things to focus on next"
-        content_source: "All flags_add values from selected options"
-        display_format: "Bulleted list of flags with descriptions"
+        content_source: "Questions where user selected option with flags_add"
+        display_format: |
+          Bulleted list in conversational format matching 'What Looks Solid':
+          - [Paraphrased question]: [User's response]
+          Example: "Distance to hospital: You're 30-60 minutes away"
         icon: "⚠️"
 
       # 6. Top Priorities - Action items
@@ -140,12 +146,18 @@ output_categorization:
   solid_items_rule:
     condition: "option.score_add == 0"
     action: "Add question/answer to 'What looks solid' section"
-    format: "Positive statement about the user's situation"
+    format: |
+      Conversational format with paraphrased question and response:
+      "[Paraphrased question]: [User's response]"
+      Example: "Distance to hospital: You're 15-30 minutes away"
 
   flagged_items_rule:
     condition: "option.flags_add is not empty"
-    action: "Add each flag to 'Things to focus on next' section"
-    format: "Warning or concern description"
+    action: "Add question/answer to 'Things to focus on next' section"
+    format: |
+      Conversational format matching 'What looks solid' style:
+      "[Paraphrased question]: [User's response]"
+      Example: "Distance to hospital: You're 30-60 minutes away"
 
   action_items_rule:
     sources:

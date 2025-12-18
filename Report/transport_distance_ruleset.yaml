@@ -75,6 +75,7 @@ questions:
   # -------------------------------------------------------------------------
   - id: q1_distance_to_hospital
     text: "How far do you live from the hospital where you plan to deliver?"
+    short_text: "Distance to hospital"
     source: "Demo 1"
 
     options:
@@ -112,6 +113,7 @@ questions:
   # -------------------------------------------------------------------------
   - id: q2_neighborhood_transport
     text: "How do you get around the neighborhood?"
+    short_text: "Getting around"
 
     options:
       - id: q2_drive
@@ -147,6 +149,7 @@ questions:
   # -------------------------------------------------------------------------
   - id: q3_vehicle_type
     text: "If you have a vehicle, what kind is it?"
+    short_text: "Vehicle type"
 
     options:
       - id: q3_sedan
@@ -184,6 +187,7 @@ questions:
   # -------------------------------------------------------------------------
   - id: q4_parking
     text: "If you have a vehicle, where do you usually park?"
+    short_text: "Parking location"
     conditional_on: q3_vehicle_type
 
     options:
@@ -225,6 +229,7 @@ questions:
   # -------------------------------------------------------------------------
   - id: q5_walk_from_parking_or_transit
     text: "How far do you walk from where you park, or get public transportation to your home?"
+    short_text: "Walk to home"
 
     options:
       - id: q5_very_short
@@ -256,6 +261,7 @@ questions:
   # -------------------------------------------------------------------------
   - id: q6_reliable_transport_to_hospital
     text: "Do you have reliable transportation to the hospital, and can you get there quickly if you need to?"
+    short_text: "Hospital transport"
 
     options:
       - id: q6_multiple
@@ -293,6 +299,7 @@ questions:
   # -------------------------------------------------------------------------
   - id: q7_car_home
     text: "If you drive yourself to the hospital for delivery, do you have someone who can drive your car home for you?"
+    short_text: "Car return help"
     conditional_on: q3_vehicle_type
 
     options:
@@ -326,6 +333,7 @@ questions:
   # -------------------------------------------------------------------------
   - id: q8_infant_car_seat
     text: "Do you have an infant car seat to bring your baby home from the hospital?"
+    short_text: "Infant car seat"
 
     options:
       - id: q8_yes
@@ -365,6 +373,7 @@ questions:
   # -------------------------------------------------------------------------
   - id: q9_nicu_transport
     text: "If your baby needs extended hospital care (NICU), how would you get back and forth to visit and/or bring breastmilk?"
+    short_text: "NICU transport"
 
     options:
       - id: q9_reliable
@@ -410,6 +419,7 @@ questions:
   # -------------------------------------------------------------------------
   - id: q10_followup_transport_confidence
     text: "After delivery, how confident are you about getting transportation to follow-up appointments for yourself and your baby?"
+    short_text: "Follow-up transport"
 
     options:
       - id: q10_multiple
