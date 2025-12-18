@@ -152,15 +152,37 @@ body {
     border-radius: 12px;
     padding: 24px;
     margin-bottom: 20px;
+    counter-increment: question-counter;
 }
 
 .question-group label.question-label {
     font-size: 16px;
     font-weight: 600;
     color: #333333;
-    display: block;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
     margin-bottom: 12px;
 }
+
+.question-group label.question-label::before {
+    content: "";
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    min-width: 12px;
+    border-radius: 3px;
+    margin-top: 4px;
+    background-color: #3B8BB8;
+}
+
+/* Colorful squares for different questions */
+.question-group:nth-child(6n+1) label.question-label::before { background-color: #3B8BB8; } /* Blue */
+.question-group:nth-child(6n+2) label.question-label::before { background-color: #7B68EE; } /* Purple */
+.question-group:nth-child(6n+3) label.question-label::before { background-color: #F77FA1; } /* Pink */
+.question-group:nth-child(6n+4) label.question-label::before { background-color: #4CAF50; } /* Green */
+.question-group:nth-child(6n+5) label.question-label::before { background-color: #FF9800; } /* Orange */
+.question-group:nth-child(6n+6) label.question-label::before { background-color: #00BCD4; } /* Cyan */
 
 /* Dropdown (Select) */
 .question-group select {
@@ -185,11 +207,11 @@ body {
     border-color: #3B8BB8;
 }
 
-/* Checkboxes */
+/* Checkboxes - Multiple Response Questions */
 .checkbox-group {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
 .checkbox-item {
@@ -197,19 +219,30 @@ body {
     align-items: center;
     gap: 12px;
     cursor: pointer;
+    background-color: #E8F4F8;
+    padding: 12px 16px;
+    border-radius: 8px;
+    border: 1px solid #C5DDE6;
+    transition: background-color 0.2s ease;
+}
+
+.checkbox-item:hover {
+    background-color: #D4E9F0;
 }
 
 .checkbox-item input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     accent-color: #3B8BB8;
     cursor: pointer;
+    flex-shrink: 0;
 }
 
 .checkbox-item label {
-    font-size: 16px;
+    font-size: 15px;
     color: #333333;
     cursor: pointer;
+    flex: 1;
 }
 
 /* Buttons */
