@@ -52,6 +52,62 @@
     </div>
 
     <script>
+        // Question paraphrase templates for brief display
+        // Use {answer} placeholder for answer text, or {answerLower} for lowercase
+        const questionParaphrases = {
+            q1_distance_to_hospital: {
+                brief: 'Hospital distance',
+                template: 'You live {answer} from the hospital'
+            },
+            q2_neighborhood_transport: {
+                brief: 'Getting around',
+                template: 'You get around by {answerLower}'
+            },
+            q3_vehicle_type: {
+                brief: 'Vehicle type',
+                template: 'Vehicle: {answer}'
+            },
+            q4_parking: {
+                brief: 'Parking',
+                template: 'Parking: {answerLower}'
+            },
+            q5_walk_distance: {
+                brief: 'Walk to home',
+                template: '{answer} to home'
+            },
+            q6_reliable_transport: {
+                brief: 'Hospital transport',
+                template: 'Hospital transport: {answerLower}'
+            },
+            q7_car_home: {
+                brief: 'Car driver available',
+                template: 'Someone to drive car home: {answerLower}'
+            },
+            q8_infant_seat: {
+                brief: 'Infant car seat',
+                template: 'Infant car seat: {answerLower}'
+            },
+            q9_nicu_transport: {
+                brief: 'NICU transport',
+                template: 'NICU transport: {answerLower}'
+            },
+            q10_followup_transport: {
+                brief: 'Follow-up transport',
+                template: 'Follow-up appointments: {answerLower}'
+            }
+        };
+
+        // Helper to format paraphrased text with answer
+        function formatParaphrase(questionId, answerText) {
+            const paraphrase = questionParaphrases[questionId];
+            if (!paraphrase) return answerText;
+
+            const answer = Array.isArray(answerText) ? answerText.join(', ') : answerText;
+            return paraphrase.template
+                .replace('{answer}', answer)
+                .replace('{answerLower}', answer.toLowerCase());
+        }
+
         // Scoring rules based on transport_distance_ruleset.yaml
         const scoringRules = {
             q1_distance_to_hospital: {
@@ -160,7 +216,10 @@
                             if (rule.resources) allResources.push(...rule.resources);
 
                             if (rule.score === 0 && rule.flags.length === 0) {
-                                solidItems.push(q.text);
+                                // Get answer text for this specific checkbox option
+                                const checkbox = document.querySelector(`input[value="${ans}"]`);
+                                const ansText = checkbox ? checkbox.nextElementSibling?.textContent : ans;
+                                solidItems.push(formatParaphrase(q.id, ansText));
                             } else if (rule.flags.length > 0) {
                                 flaggedItems.push({ question: q.text, answer: ans, flags: rule.flags });
                             }
@@ -176,7 +235,7 @@
                         if (rule.resources) allResources.push(...rule.resources);
 
                         if (rule.score === 0 && rule.flags.length === 0) {
-                            solidItems.push(q.text);
+                            solidItems.push(formatParaphrase(q.id, q.answerText));
                         } else if (rule.flags && rule.flags.length > 0) {
                             flaggedItems.push({ question: q.text, answer: q.answerText, flags: rule.flags });
                         }
@@ -245,11 +304,14 @@
 
             markdown += `---\n\n`;
             markdown += `## Survey Responses\n\n`;
+            markdown += `| Question | Response |\n`;
+            markdown += `|----------|----------|\n`;
             responses.questions.forEach(q => {
                 const answer = Array.isArray(q.answerText) ? q.answerText.join(', ') : q.answerText;
                 if (answer && answer !== 'Select an option...') {
-                    markdown += `**${q.text}**\n`;
-                    markdown += `> ${answer}\n\n`;
+                    const paraphrase = questionParaphrases[q.id];
+                    const briefQuestion = paraphrase ? paraphrase.brief : q.text;
+                    markdown += `| ${briefQuestion} | ${answer} |\n`;
                 }
             });
 
@@ -375,16 +437,64 @@
             doc.line(margin, yPos, pageWidth - margin, yPos);
             yPos += 10;
 
-            // Survey Responses
+            // Survey Responses - Table Format
             addText('Survey Responses', 14, true, [43, 112, 150]);
             yPos += 5;
+
+            // Table dimensions
+            const tableStartX = margin;
+            const colWidth1 = 55; // Question column
+            const colWidth2 = contentWidth - colWidth1; // Answer column
+            const rowHeight = 8;
+            const cellPadding = 2;
+
+            // Table header
+            doc.setFillColor(240, 240, 240);
+            doc.rect(tableStartX, yPos, colWidth1, rowHeight, 'F');
+            doc.rect(tableStartX + colWidth1, yPos, colWidth2, rowHeight, 'F');
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(43, 112, 150);
+            doc.text('Question', tableStartX + cellPadding, yPos + 5);
+            doc.text('Response', tableStartX + colWidth1 + cellPadding, yPos + 5);
+            yPos += rowHeight;
+
+            // Table rows
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(0, 0, 0);
 
             responses.questions.forEach(q => {
                 const answer = Array.isArray(q.answerText) ? q.answerText.join(', ') : q.answerText;
                 if (answer && answer !== 'Select an option...') {
-                    addText(q.text, 10, true);
-                    addText(answer, 10, false, [80, 80, 80], 5);
-                    yPos += 3;
+                    // Check for page break
+                    if (yPos > 265) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+
+                    // Get brief question text
+                    const paraphrase = questionParaphrases[q.id];
+                    const briefQuestion = paraphrase ? paraphrase.brief : q.text.substring(0, 30);
+
+                    // Draw row border
+                    doc.setDrawColor(220, 220, 220);
+                    doc.rect(tableStartX, yPos, colWidth1, rowHeight);
+                    doc.rect(tableStartX + colWidth1, yPos, colWidth2, rowHeight);
+
+                    // Draw text
+                    doc.setFontSize(9);
+                    doc.setTextColor(60, 60, 60);
+                    doc.text(briefQuestion, tableStartX + cellPadding, yPos + 5);
+
+                    // Truncate answer if needed to fit
+                    const maxAnswerWidth = colWidth2 - (cellPadding * 2);
+                    let displayAnswer = answer;
+                    while (doc.getTextWidth(displayAnswer) > maxAnswerWidth && displayAnswer.length > 10) {
+                        displayAnswer = displayAnswer.substring(0, displayAnswer.length - 4) + '...';
+                    }
+                    doc.text(displayAnswer, tableStartX + colWidth1 + cellPadding, yPos + 5);
+
+                    yPos += rowHeight;
                 }
             });
 
