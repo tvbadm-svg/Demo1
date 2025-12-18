@@ -325,6 +325,11 @@ body {
     margin: 8px;
 }
 
+/* Intro Image */
+.intro-image img {
+    mix-blend-mode: multiply;
+}
+
 /* Heart Decorations */
 .hearts {
     color: #7B68EE;
