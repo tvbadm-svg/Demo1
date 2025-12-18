@@ -17,8 +17,9 @@ scoring:
     low: [0, 2]
     moderate: [3, 5]
     high: [6, 8]
-    critical: [9, 12]
-  max_score: 27  # Sum of maximum possible score_add values
+    very_high: [9, 12]
+    critical: [13, 28]
+  max_score: 28  # Sum of maximum possible score_add values
 
 # ----------------------------------------------------------------------------
 # GLOBAL FIELDS
