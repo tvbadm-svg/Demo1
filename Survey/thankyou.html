@@ -174,18 +174,20 @@
             }
         };
 
-        // Risk level bands
+        // Risk level bands (per transport_distance_ruleset.yaml)
         const riskBands = {
             low: [0, 2],
             moderate: [3, 5],
             high: [6, 8],
-            critical: [9, 27]
+            very_high: [9, 12],
+            critical: [13, 28]
         };
 
         function getRiskLevel(score) {
             if (score <= 2) return { level: 'Low', color: '#4CAF50' };
             if (score <= 5) return { level: 'Moderate', color: '#FFC107' };
             if (score <= 8) return { level: 'High', color: '#FF9800' };
+            if (score <= 12) return { level: 'Very High', color: '#E65100' };
             return { level: 'Critical', color: '#F44336' };
         }
 
@@ -265,7 +267,7 @@
             markdown += `**Theme:** Transportation and Distance Factors 🚗\n\n`;
             markdown += `---\n\n`;
             markdown += `## Overall Assessment\n\n`;
-            markdown += `- **Risk Score:** ${report.score}/27\n`;
+            markdown += `- **Risk Score:** ${report.score}/28\n`;
             markdown += `- **Risk Level:** ${report.riskLevel.level}\n\n`;
 
             if (report.solidItems.length > 0) {
@@ -372,13 +374,14 @@
             // Overall Assessment
             addText('Overall Assessment', 14, true, [43, 112, 150]);
             yPos += 2;
-            addText(`Risk Score: ${report.score}/27`, 11, false);
+            addText(`Risk Score: ${report.score}/28`, 11, false);
 
             // Risk level with color
             const riskColors = {
                 'Low': [76, 175, 80],
                 'Moderate': [255, 193, 7],
                 'High': [255, 152, 0],
+                'Very High': [230, 81, 0],
                 'Critical': [244, 67, 54]
             };
             addText(`Risk Level: ${report.riskLevel.level}`, 11, true, riskColors[report.riskLevel.level] || [0, 0, 0]);
