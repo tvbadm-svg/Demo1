@@ -84,6 +84,7 @@ questions:
   # -------------------------------------------------------------------------
   - id: "q1_example_question"
     text: "What is your example question text?"
+    short_text: "Short question label"  # For conversational display in report sections
     source: "Survey Section Name"  # Optional: source reference
 
     options:
