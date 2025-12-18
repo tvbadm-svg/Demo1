@@ -178,6 +178,51 @@
     </div>
 
     <script>
+        // Auto-update vehicle-related questions when "I don't have a vehicle" is selected
+        const vehicleNoneCheckbox = document.getElementById('vehicle_none');
+        const parkingSelect = document.querySelector('select[name="parking_location"]');
+        const carDriverSelect = document.querySelector('select[name="car_driver"]');
+
+        vehicleNoneCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                // Uncheck other vehicle options since they have no vehicle
+                document.getElementById('vehicle_sedan').checked = false;
+                document.getElementById('vehicle_sports').checked = false;
+                document.getElementById('vehicle_suv').checked = false;
+
+                // Auto-select "I don't have a vehicle" in Q4 (parking) and Q7 (car driver)
+                parkingSelect.value = 'no_vehicle';
+                carDriverSelect.value = 'no_vehicle';
+
+                // Add visual indicator that fields were auto-filled
+                parkingSelect.style.backgroundColor = '#e8f4f8';
+                carDriverSelect.style.backgroundColor = '#e8f4f8';
+            } else {
+                // Reset the dropdowns when unchecked
+                parkingSelect.value = '';
+                carDriverSelect.value = '';
+
+                // Remove visual indicator
+                parkingSelect.style.backgroundColor = '';
+                carDriverSelect.style.backgroundColor = '';
+            }
+        });
+
+        // If user selects a vehicle type, uncheck "no vehicle" and reset auto-filled fields
+        ['vehicle_sedan', 'vehicle_sports', 'vehicle_suv'].forEach(function(id) {
+            document.getElementById(id).addEventListener('change', function() {
+                if (this.checked && vehicleNoneCheckbox.checked) {
+                    vehicleNoneCheckbox.checked = false;
+
+                    // Reset the auto-filled dropdowns
+                    parkingSelect.value = '';
+                    carDriverSelect.value = '';
+                    parkingSelect.style.backgroundColor = '';
+                    carDriverSelect.style.backgroundColor = '';
+                }
+            });
+        });
+
         // Save survey responses to localStorage before navigating to thank you page
         document.getElementById('continueBtn').addEventListener('click', function(e) {
             e.preventDefault();
