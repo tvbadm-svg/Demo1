@@ -159,7 +159,7 @@
 
             <!-- Question 10 - SINGLE (Dropdown) -->
             <div class="question-group">
-                <label class="question-label">After delivery, how confident are you about getting transportation to follow-up appointments for yourself and your baby?</label>
+                <label class="question-label">After your discharge from the hospital, how confident are you about getting transportation to follow-up appointments for yourself and your baby?</label>
                 <select name="followup_transport">
                     <option value="">Select an option...</option>
                     <option value="multiple">I have multiple, reliable options</option>
@@ -318,7 +318,7 @@
             const followupTransport = document.querySelector('select[name="followup_transport"]');
             responses.questions.push({
                 id: 'q10_followup_transport',
-                text: 'After delivery, how confident are you about getting transportation to follow-up appointments for yourself and your baby?',
+                text: 'After your discharge from the hospital, how confident are you about getting transportation to follow-up appointments for yourself and your baby?',
                 answer: followupTransport.value,
                 answerText: followupTransport.options[followupTransport.selectedIndex]?.text || ''
             });

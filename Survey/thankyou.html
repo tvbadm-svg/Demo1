@@ -27,8 +27,7 @@
         <div class="survey-content thank-you-content">
             <h2>Thank You</h2>
             <div class="hearts">💜 💜 💜</div>
-            <p>Thank you for taking the time to share all of this with us. Every detail you've provided helps us understand what matters most to you and your family.</p>
-            <p>Remember, there's no rush to make this decision, and it's completely normal to have mixed feelings. We're here to support you through this process, answer any questions that come up, and respect whatever choice feels right for you.</p>
+            <p>Thank you for taking the time to share all of this with us. Every answer helps us understand what matters most to you and your family.</p>
             <p class="emphasis">Your birth experience is important, and so are you. Let's work together to make sure you feel confident and supported in whatever path you choose.</p>
 
             <!-- Download Section -->
@@ -273,39 +272,11 @@
             const timestamp = new Date(report.timestamp).toLocaleString();
 
             let markdown = `# Birth Choice Survey - Personalized Report\n\n`;
-            markdown += `**Generated:** ${timestamp}\n`;
-            markdown += `**Theme:** Transportation and Distance Factors 🚗\n\n`;
+            markdown += `**Generated:** ${timestamp}\n\n`;
             markdown += `---\n\n`;
-            markdown += `## Overall Assessment\n\n`;
-            markdown += `- **Risk Score:** ${report.score}/28\n`;
-            markdown += `- **Risk Level:** ${report.riskLevel.level}\n\n`;
-
-            if (report.solidItems.length > 0) {
-                markdown += `## ✅ What Looks Solid\n\n`;
-                report.solidItems.forEach(item => {
-                    markdown += `- ${item}\n`;
-                });
-                markdown += `\n`;
-            }
-
-            if (report.flaggedItems.length > 0) {
-                markdown += `## ⚠️ Things to Focus On\n\n`;
-                report.flaggedItems.forEach(item => {
-                    markdown += `- **${item.question}**\n`;
-                    markdown += `  - Answer: ${item.answer}\n`;
-                    markdown += `  - Flags: ${item.flags.join(', ')}\n`;
-                });
-                markdown += `\n`;
-            }
-
-            if (report.resources.length > 0) {
-                markdown += `## 🤝 Support Resources\n\n`;
-                report.resources.forEach(resource => {
-                    markdown += `- ${resource}\n`;
-                });
-                markdown += `\n`;
-            }
-
+            markdown += `## Transportation and Distance Factors\n\n`;
+            markdown += `Transportation can play a bigger role in birth and recovery than many people expect. Looking at it ahead of time helps reduce last-minute stress.\n\n`;
+            markdown += `Many families face transportation challenges — especially around timing, distance, or support. Needing a plan doesn't mean something is wrong.\n\n`;
             markdown += `---\n\n`;
             markdown += `## Survey Responses\n\n`;
             markdown += `| Question | Response | Your Action Items |\n`;
@@ -367,7 +338,6 @@
 
             // Metadata
             addText(`Generated: ${timestamp}`, 10, false, [100, 100, 100]);
-            addText('Theme: Transportation and Distance Factors', 10, false, [100, 100, 100]);
             yPos += 5;
 
             // Horizontal line
@@ -375,59 +345,13 @@
             doc.line(margin, yPos, pageWidth - margin, yPos);
             yPos += 10;
 
-            // Overall Assessment
-            addText('Overall Assessment', 14, true, [43, 112, 150]);
+            // Transportation and Distance Factors intro
+            addText('Transportation and Distance Factors', 14, true, [43, 112, 150]);
             yPos += 2;
-            addText(`Risk Score: ${report.score}/28`, 11, false);
-
-            // Risk level with color
-            const riskColors = {
-                'Low': [76, 175, 80],
-                'Moderate': [255, 193, 7],
-                'High': [255, 152, 0],
-                'Very High': [230, 81, 0],
-                'Critical': [244, 67, 54]
-            };
-            addText(`Risk Level: ${report.riskLevel.level}`, 11, true, riskColors[report.riskLevel.level] || [0, 0, 0]);
-            yPos += 5;
-
-            // What Looks Solid
-            if (report.solidItems.length > 0) {
-                addText('What Looks Solid', 14, true, [76, 175, 80]);
-                yPos += 2;
-                report.solidItems.forEach(item => {
-                    addText(`• ${item}`, 10, false, null, 5);
-                });
-                yPos += 5;
-            }
-
-            // Things to Focus On
-            if (report.flaggedItems.length > 0) {
-                addText('Things to Focus On', 14, true, [255, 152, 0]);
-                yPos += 2;
-                report.flaggedItems.forEach(item => {
-                    addText(`• ${item.question}`, 10, true, null, 5);
-                    addText(`Answer: ${item.answer}`, 9, false, [100, 100, 100], 10);
-                    addText(`Flags: ${item.flags.join(', ')}`, 9, false, [100, 100, 100], 10);
-                });
-                yPos += 5;
-            }
-
-            // Support Resources
-            if (report.resources.length > 0) {
-                addText('Support Resources', 14, true, [59, 139, 184]);
-                yPos += 2;
-                report.resources.forEach(resource => {
-                    addText(`• ${resource}`, 10, false, null, 5);
-                });
-                yPos += 5;
-            }
-
-            // Page break before survey responses if needed
-            if (yPos > 200) {
-                doc.addPage();
-                yPos = 20;
-            }
+            addText('Transportation can play a bigger role in birth and recovery than many people expect. Looking at it ahead of time helps reduce last-minute stress.', 10, false);
+            yPos += 3;
+            addText('Many families face transportation challenges — especially around timing, distance, or support. Needing a plan doesn\'t mean something is wrong.', 10, false);
+            yPos += 8;
 
             // Horizontal line
             doc.setDrawColor(200, 200, 200);
